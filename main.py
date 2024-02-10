@@ -98,28 +98,33 @@ def get_nearest_object(point, kind):
 
 
 
-map_request = "http://static-maps.yandex.ru/1.x/"
+def get_map_image(zoom, cords):
+    map_request = "http://static-maps.yandex.ru/1.x/"
+
+    map_params = {
+        "ll": ",".join([str(el) for el in cords]),
+        "l": "map",
+        "z": str(zoom)
+    }
+
+    response = requests.get(map_request, params=map_params)
+
+    if not response:
+        print("Ошибка выполнения запроса:")
+        print(map_request)
+        print("Http статус:", response.status_code, "(", response.reason, ")")
+        sys.exit(1)
+
+    # Запишем полученное изображение в файл.
+    map_file = "map.png"
+    with open(map_file, "wb") as file:
+        file.write(response.content)
+    return map_file
 
 ZOOM = 12
+cords = (37.677751, 55.757718)
 
-map_params = {
-    "ll": '37.530887,55.703118',
-    "l": "map",
-    "z": str(ZOOM)
-}
-
-response = requests.get(map_request, params=map_params)
-
-if not response:
-    print("Ошибка выполнения запроса:")
-    print(map_request)
-    print("Http статус:", response.status_code, "(", response.reason, ")")
-    sys.exit(1)
-
-# Запишем полученное изображение в файл.
-map_file = "map.png"
-with open(map_file, "wb") as file:
-    file.write(response.content)
+map_file = get_map_image(ZOOM, cords)
 
 # Инициализируем pygame
 pygame.init()
@@ -127,9 +132,26 @@ screen = pygame.display.set_mode((600, 450))
 # Рисуем картинку, загружаемую из только что созданного файла.
 screen.blit(pygame.image.load(map_file), (0, 0))
 # Переключаем экран и ждем закрытия окна.
-pygame.display.flip()
-while pygame.event.wait().type != pygame.QUIT:
-    pass
+running = True
+while running:
+
+    screen.blit(pygame.image.load(map_file), (0, 0))
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_PAGEDOWN:
+                ZOOM -= 1
+                ZOOM = max(min(21, ZOOM), 0)
+                map_file = get_map_image(ZOOM, cords)
+            if event.key == pygame.K_PAGEUP:
+                ZOOM += 1
+                ZOOM = max(min(21, ZOOM), 0)
+                map_file = get_map_image(ZOOM, cords)
+
+
+    pygame.display.flip()
 pygame.quit()
 
 # Удаляем за собой файл с изображением.
