@@ -112,6 +112,7 @@ def get_map_image(zoom, cords):
     if not response:
         print("Ошибка выполнения запроса:")
         print(map_request)
+        print(map_params)
         print("Http статус:", response.status_code, "(", response.reason, ")")
         sys.exit(1)
 
@@ -136,7 +137,7 @@ running = True
 while running:
 
     screen.blit(pygame.image.load(map_file), (0, 0))
-
+    print(cords)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -149,7 +150,22 @@ while running:
                 ZOOM += 1
                 ZOOM = max(min(21, ZOOM), 0)
                 map_file = get_map_image(ZOOM, cords)
-
+            if event.key == pygame.K_UP:
+                x, y = cords
+                cords = x, max(min(90, y + 1), -90)
+                map_file = get_map_image(ZOOM, cords)
+            if event.key == pygame.K_DOWN:
+                x, y = cords
+                cords = x, max(min(90, y - 1), -90)
+                map_file = get_map_image(ZOOM, cords)
+            if event.key == pygame.K_RIGHT:
+                x, y = cords
+                cords = max(min(85, x + 1), -85), y
+                map_file = get_map_image(ZOOM, cords)
+            if event.key == pygame.K_LEFT:
+                x, y = cords
+                cords = max(min(85, x - 1), -85), y
+                map_file = get_map_image(ZOOM, cords)
 
     pygame.display.flip()
 pygame.quit()
