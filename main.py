@@ -6,6 +6,7 @@ import requests
 
 API_KEY = '40d1649f-0493-4b70-98ba-98533de7710b'
 
+
 def geocode(address):
     # Собираем запрос для геокодера.
     geocoder_request = f"http://geocode-maps.yandex.ru/1.x/?apikey={API_KEY}" \
@@ -96,8 +97,6 @@ def get_nearest_object(point, kind):
     return features[0]["GeoObject"]["name"] if features else None
 
 
-
-
 def get_map_image(zoom, cords):
     map_request = "http://static-maps.yandex.ru/1.x/"
 
@@ -121,6 +120,7 @@ def get_map_image(zoom, cords):
     with open(map_file, "wb") as file:
         file.write(response.content)
     return map_file
+
 
 ZOOM = 12
 cords = (37.677751, 55.757718)
@@ -152,19 +152,19 @@ while running:
                 map_file = get_map_image(ZOOM, cords)
             if event.key == pygame.K_UP:
                 x, y = cords
-                cords = x, max(min(90, y + 1), -90)
+                cords = x, max(min(90, y + 0.01 / ZOOM), -90)
                 map_file = get_map_image(ZOOM, cords)
             if event.key == pygame.K_DOWN:
                 x, y = cords
-                cords = x, max(min(90, y - 1), -90)
+                cords = x, max(min(90, y - 0.01 / ZOOM), -90)
                 map_file = get_map_image(ZOOM, cords)
             if event.key == pygame.K_RIGHT:
                 x, y = cords
-                cords = max(min(85, x + 1), -85), y
+                cords = max(min(85, x + 0.01 / ZOOM), -85), y
                 map_file = get_map_image(ZOOM, cords)
             if event.key == pygame.K_LEFT:
                 x, y = cords
-                cords = max(min(85, x - 1), -85), y
+                cords = max(min(85, x - 0.01 / ZOOM), -85), y
                 map_file = get_map_image(ZOOM, cords)
 
     pygame.display.flip()
