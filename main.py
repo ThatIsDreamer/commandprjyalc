@@ -4,6 +4,8 @@ import sys
 import pygame
 import requests
 
+API_KEY = '40d1649f-0493-4b70-98ba-98533de7710b'
+
 def geocode(address):
     # Собираем запрос для геокодера.
     geocoder_request = f"http://geocode-maps.yandex.ru/1.x/?apikey={API_KEY}" \
@@ -96,17 +98,17 @@ def get_nearest_object(point, kind):
 
 
 
-map_request = "http://static-maps.yandex.ru/1.x/?ll=37.530887,55.703118&spn=0.002,0.002&l=map"
+map_request = "http://static-maps.yandex.ru/1.x/"
 
+ZOOM = 12
 
 map_params = {
     "ll": '37.530887,55.703118',
-    "spn": "0.002,0.002",
     "l": "map",
-    "scale": "4.0"
+    "z": str(ZOOM)
 }
 
-response = requests.get(map_request, map_params)
+response = requests.get(map_request, params=map_params)
 
 if not response:
     print("Ошибка выполнения запроса:")
