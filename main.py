@@ -1,5 +1,6 @@
 import os
 import sys
+from typing import LiteralString
 
 import pygame
 import requests
@@ -44,8 +45,16 @@ def get_coordinates(address):
     return float(toponym_longitude), float(toponym_lattitude)
 
 
-# Получаем параметры объекта для рисования карты вокруг него.
-def get_ll_span(address):
+def get_ll_span(address: str) -> (LiteralString, str):
+    """
+    Получаем параметры объекта для рисования карты вокруг него.
+
+    :param address: Адрес объекта
+    :type address: str
+
+    :rtype: (LiteralString, str)
+    :return: (кортеж из координаты объекта, размеры карты)
+    """
     toponym = geocode(address)
     if not toponym:
         return (None, None)
@@ -123,7 +132,10 @@ def get_map_image(zoom, cords):
 
 
 ZOOM = 12
+offset_multipliyer = 2**12
+OFFSET_COORD = 4096/100
 cords = (37.677751, 55.757718)
+prev_coords=(0, 0)
 
 map_file = get_map_image(ZOOM, cords)
 
@@ -137,34 +149,41 @@ running = True
 while running:
 
     screen.blit(pygame.image.load(map_file), (0, 0))
-    print(cords)
+    if prev_coords != cords:
+        print(cords)
+        print(offset_multipliyer)
+        prev_coords = cords
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_PAGEDOWN:
                 ZOOM -= 1
+                offset_multipliyer /= 2
+                offset_multipliyer = max(min(2**21, offset_multipliyer), 1)
                 ZOOM = max(min(21, ZOOM), 0)
                 map_file = get_map_image(ZOOM, cords)
             if event.key == pygame.K_PAGEUP:
                 ZOOM += 1
+                offset_multipliyer *= 2
+                offset_multipliyer = max(min(2**21, offset_multipliyer), 1)
                 ZOOM = max(min(21, ZOOM), 0)
                 map_file = get_map_image(ZOOM, cords)
             if event.key == pygame.K_UP:
                 x, y = cords
-                cords = x, max(min(90, y + 0.01 / ZOOM), -90)
+                cords = x, max(min(90, y + OFFSET_COORD / offset_multipliyer), -90)
                 map_file = get_map_image(ZOOM, cords)
             if event.key == pygame.K_DOWN:
                 x, y = cords
-                cords = x, max(min(90, y - 0.01 / ZOOM), -90)
+                cords = x, max(min(90, y - OFFSET_COORD / offset_multipliyer), -90)
                 map_file = get_map_image(ZOOM, cords)
             if event.key == pygame.K_RIGHT:
                 x, y = cords
-                cords = max(min(85, x + 0.01 / ZOOM), -85), y
+                cords = max(min(85, x + OFFSET_COORD / offset_multipliyer), -85), y
                 map_file = get_map_image(ZOOM, cords)
             if event.key == pygame.K_LEFT:
                 x, y = cords
-                cords = max(min(85, x - 0.01 / ZOOM), -85), y
+                cords = max(min(85, x - OFFSET_COORD / offset_multipliyer), -85), y
                 map_file = get_map_image(ZOOM, cords)
 
     pygame.display.flip()
